@@ -1,0 +1,27 @@
+.sidebar1 h2 {
+    margin-top: 0; 
+}
+
+.sidebar1 ul {
+    list-style-type: none;
+    padding: 0; 
+    margin-top: 50px;
+}
+
+.sidebar1 li {
+    margin: 10px 0; 
+    cursor: pointer;
+
+}
+
+
+.sidebar1{
+    background-color: #3A536B   ;
+    color: #ffff;
+    height: 100%; 
+    position: fixed; 
+    padding: 20px; }
+
+.logoutbtn{
+    color: #ffff;
+}
