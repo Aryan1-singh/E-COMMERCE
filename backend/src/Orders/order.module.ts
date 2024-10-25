@@ -7,7 +7,7 @@ import { OrderService } from './order.service';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([OrderEntity]), // Import RoleEntity into TypeOrmModule
+        TypeOrmModule.forFeature([OrderEntity]), 
       ],
   controllers: [OrderController],
   providers: [ OrderService],

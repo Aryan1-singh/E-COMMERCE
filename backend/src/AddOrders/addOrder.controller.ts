@@ -13,7 +13,7 @@ import {
   import { AddOrderDto } from './addOrder.dto';
 
 
-  @Controller('addorders')
+  @Controller('product')
   export class AddOrderController {
     constructor(
       private readonly addorderService: AddOrderService,
@@ -51,6 +51,12 @@ import {
 async deleteAllOrders(): Promise<string> {
   return this.addorderService.deleteAllAddOrders();
 }
+
+@Get('/orderitem/:customerId')
+async findOrdersByCustomerId(@Param('customerId') customerId: string): Promise<AddOrder[]> {
+  return this.addorderService.findOrdersByCustomerId(customerId);
+}
+
 
 
 }

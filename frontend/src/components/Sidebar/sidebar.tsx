@@ -19,6 +19,7 @@ function Sidebar() {
       <h3>E-Commerce</h3>
       <ul className="flex-grow-1">
         <li onClick={() => navigate('/dashboard')} >Manage Order</li>
+        <li onClick={() => navigate('/manageCustomer')} >Manage Customer</li>
         <li onClick={() => navigate('/about')} >About us</li>
       </ul>
       

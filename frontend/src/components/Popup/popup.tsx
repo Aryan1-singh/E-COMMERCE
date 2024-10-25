@@ -24,7 +24,7 @@ const Popup: React.FC<PopupProps> = ({ isOpen, onClose, title, children }) => {
             {children}
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>Close</button>
+            {/* <button type="button" className="btn btn-secondary" onClick={onClose}>Close</button> */}
           </div>
         </div>
       </div>

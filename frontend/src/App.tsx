@@ -4,6 +4,7 @@ import Login from './components/Login/login';
 import Dashboard from './components/Dashboard/dashboard';
 import Order from './components/Order/order';
 import About from './components/About/about';
+import Customer from './components/Customer/customer';
 
 const App: React.FC = () => {
     return (
@@ -12,6 +13,7 @@ const App: React.FC = () => {
                 <Route path="/" element={<Login />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/order" element={<Order />} />
+                <Route path="/manageCustomer" element={<Customer />} />
                 <Route path="/about" element={<About />} />
             </Routes>
         </Router>

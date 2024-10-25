@@ -6,6 +6,7 @@ import { LoggerModule } from './common/logger/logger.module';
 import * as dotenv from 'dotenv';
 import { AddOrderModule } from './AddOrders/addOrder.module';
 import { OrderModule } from './Orders/order.module';
+import { CustomerModule } from './Cutomer/customer.module';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ dotenv.config();
     }),
     UsersModule,
     AddOrderModule,
+    CustomerModule,
     OrderModule,
     AuthModule,
     LoggerModule,

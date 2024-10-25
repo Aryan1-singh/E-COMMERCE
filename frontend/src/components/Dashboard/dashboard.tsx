@@ -7,6 +7,7 @@ import axios from 'axios';
 interface Order {
   id: number;
   customerName: string;
+  orderId: number;
   totalQuantity: number;
   totalPrice: number;
 }
@@ -14,8 +15,8 @@ interface Order {
 
 
 function Dashboard() {
-  const navigate = useNavigate(); 
-  const [orders, setOrders] = useState<Order[]>([]); 
+  const navigate = useNavigate();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -25,18 +26,18 @@ function Dashboard() {
     const fetchOrders = async () => {
       try {
         const response = await axios.get('http://localhost:8000/orders');
-        setOrders(response.data); 
+        setOrders(response.data);
       } catch (err) {
         setError('Error fetching orders');
       } finally {
-        setLoading(false);  
+        setLoading(false);
       }
     };
 
-    fetchOrders();  
+    fetchOrders();
   }, []);
 
- 
+
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -67,8 +68,11 @@ function Dashboard() {
 
           </div>
           <div className="col-md-10">
+            <span >
+              <h1 className='pt-5' >Manage Orders</h1> </span>
             <div className="d-flex justify-content-end mt-5">
-              <button className="btn btn-primary " onClick={() => navigate('/order')} 
+
+              <button className="btn btn-primary " onClick={() => navigate('/order')}
               >New Order</button>
             </div>
             <div className="d-flex justify-content-center mt-3">
@@ -79,25 +83,25 @@ function Dashboard() {
                   <tr>
                     <th scope="col">Id</th>
                     <th scope="col">Customer Name</th>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Price</th>
+                    <th scope="col">Order ID</th>
+                    <th scope="col">Amount</th>
                     <th scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                {orders.map((order) => (
-                      <tr key={order.id}>
-                        <th scope="row">{order.id}</th>
-                        <td>{order.customerName}</td>
-                        <td>{order.totalQuantity}</td>
-                        <td>{order.totalPrice}</td>
-                        <td>
-                          <button className="btn" onClick={() => handleDeleteClick(order.id)}>
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                  {orders.map((order) => (
+                    <tr key={order.id}>
+                      <th scope="row">{order.id}</th>
+                      <td>{order.customerName}</td>
+                      <td>{order.orderId}</td>
+                      <td>{order.totalPrice}</td>
+                      <td>
+                        <button className="btn" onClick={() => handleDeleteClick(order.id)}>
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
 

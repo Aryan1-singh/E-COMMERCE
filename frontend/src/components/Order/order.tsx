@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { SetStateAction, useEffect, useState } from 'react';
 import "./order.css";
 import Sidebar from '../Sidebar/sidebar';
 import Popup from '../Popup/popup';
@@ -8,10 +8,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
-
-
-
-
 interface OrderItem {
   orderId: number;
   productName: string;
@@ -19,6 +15,19 @@ interface OrderItem {
   price: number;
 }
 
+
+interface Customer {
+  Id: number;
+  fullName: string;
+}
+
+const products = [
+  { name: 'Earbuds', price: 800 },
+  { name: 'Mouse', price: 250 },
+  { name: 'Phone Cover', price: 120 },
+  { name: 'Buds Cover', price: 90 },
+  { name: 'Smart Watch', price: 999 },
+];
 
 
 function Order() {
@@ -32,13 +41,12 @@ function Order() {
   const [popupTitle, setPopupTitle] = useState('');
   const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(2); 
+  const [itemsPerPage] = useState(2);
   const [totalQuantity, setTotalQuantity] = useState(0);
-const [totalPrice, setTotalPrice] = useState(0);
-const [customerName, setCustomerName] = useState(''); 
-
-  
-
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [customerName, setCustomerName] = useState('');
+  const [customers, setCustomers] = useState<Customer[]>([]); // Set type for customers
+  const [selectedCustomer, setSelectedCustomer] = useState('');
 
 
   useEffect(() => {
@@ -52,30 +60,34 @@ const [customerName, setCustomerName] = useState('');
     const calculateTotals = () => {
       const totalQty = tableData.reduce((sum, item) => sum + item.quantity, 0);
       const totalPr = tableData.reduce((sum, item) => sum + item.price, 0);
-      
+
       setTotalQuantity(totalQty);
       setTotalPrice(totalPr);
     };
-  
+
     calculateTotals();
-  }, [tableData]); 
+  }, [tableData]);
   
+
+
+
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCustomers = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/addorders');
-        setTableData(response.data); // Assuming response.data contains the array of order items
+        const response = await axios.get('http://localhost:8000/customer');
+        setCustomers(response.data);
       } catch (error) {
-        console.error('Error fetching data:', error);
-        toast.error('Failed to fetch orders');
+        console.error('Error fetching customers:', error);
       }
     };
-  
-    fetchData();
+
+    fetchCustomers();
   }, []);
 
-
+  const handleCustomerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCustomer(e.target.value);
+  };
 
   const handleAddClick = () => {
     setPopupTitle('Add Order');
@@ -91,109 +103,180 @@ const [customerName, setCustomerName] = useState('');
     setIsPopupOpen(true);
   };
 
-  const handleDeleteClick = async (item: OrderItem) => {
-    try {
-        await axios.delete(`http://localhost:8000/addorders/${item.orderId}`);
-        setTableData((prevTableData) =>
-            prevTableData.filter((data) => data.orderId !== item.orderId)
-        );
-    } catch (error) {
-        console.error('Error deleting order:', error);
-    }
-};
+  const handleDeleteClick = (item: OrderItem) => {
+    setTableData((prevTableData) => prevTableData.filter((data) => data.orderId !== item.orderId));
+    setTotalQuantity((prevTotal) => prevTotal - item.quantity);
+    setTotalPrice((prevTotal) => prevTotal - item.price);
+  };
 
-  const handleClosePopup =  () => {
+
+
+  const handleClosePopup = () => {
     setIsPopupOpen(false);
   };
 
-  const handleSaveClick = async () => {
+
+  const handleSaveClick = () => {
     if (!formData.productName || !formData.quantity || !formData.price) {
-        toast.error("Please fill in all fields");
-        return;
-    }
-
-    try {
-        const response = await axios.post(`${Base_Url}addorders`, {
-            productName: formData.productName,
-            quantity: formData.quantity,
-            price: formData.price
-        });
-
-        console.log(response.data);
-
-        if (response.data) {
-            const newOrder: OrderItem = {
-                orderId: response.data.orderId, 
-                productName: formData.productName,
-                quantity: formData.quantity,
-                price: formData.price
-            };
-
-            setTableData((prev) => [...prev, newOrder]); 
-
-            setFormData({ productName: '', quantity: 0, price: 0 });
-
-            toast.success("Order saved successfully!");
-            setIsPopupOpen(false); 
-        } else {
-            toast.error("Failed to save order");
-        }
-    } catch (error) {
-        toast.error("An error occurred while saving the order");
-        console.error(error);
-    }
-};
-
-
-  
-  
-
-  const handleSaveOrderClick = async () => {
-    if (!customerName || totalQuantity === 0 || totalPrice === 0) {
-      toast.error("Please ensure that the customer name, total quantity, and total price are provided");
+      toast.error("Please fill in all fields");
       return;
     }
 
+    const newOrder: OrderItem = {
+      orderId: Date.now(),
+      productName: formData.productName,
+      quantity: formData.quantity,
+      price: formData.price
+    };
+
+    setTableData((prev) => [...prev, newOrder]);
+    setTotalQuantity((prev) => prev + formData.quantity);
+    setTotalPrice((prev) => prev + formData.price);
+
+    setFormData({ productName: '', quantity: 0, price: 0 });
+
+    toast.success("Order saved successfully!");
+    setIsPopupOpen(false);
+  };
+
+  const handleSaveOrderClick = async () => {
+    if (!selectedCustomer || totalQuantity === 0 || totalPrice === 0) {
+      toast.error("Please ensure that a customer is selected and totals are not zero");
+      return;
+    }
+    const selectedCustomerObj = customers.find(customer => customer.fullName === selectedCustomer);
+    if (!selectedCustomerObj) {
+      toast.error("Selected customer not found");
+      return;
+    }
     try {
-      const response = await axios.post(`${Base_Url}orders`, {
-        customerName,
+      const orderIds = [];
+
+      for (const orderItem of tableData) {
+        const response = await axios.post(`${Base_Url}product`, {
+          customerId: selectedCustomerObj.Id,
+          productName: orderItem.productName,
+          quantity: orderItem.quantity,
+          price: orderItem.price
+        });
+
+        if (response.data && response.data.orderId) {
+          orderIds.push(response.data.orderId);
+        } else {
+          toast.error("Failed to save order item");
+        }
+      }
+
+      if (orderIds.length === 0) {
+        return;
+      }
+
+      const overallResponse = await axios.post(`${Base_Url}orders`, {
+        customerId: selectedCustomerObj.Id,
+        orderId: orderIds[orderIds.length - 1],
+        customerName: selectedCustomerObj.fullName,
         totalQuantity,
         totalPrice
       });
 
-      if (response.data) {
+      if (overallResponse.data) {
         toast.success("Order saved successfully!");
-
-        await axios.delete(`${Base_Url}addorders`);
-        // toast.success("Previous orders deleted successfully!");
-        navigate('/dashboard');
-
         setTableData([]);
+        setTotalQuantity(0);
+        setTotalPrice(0);
+
+        navigate('/dashboard');
       } else {
         toast.error("Failed to save order");
       }
     } catch (error) {
-      toast.error("An error occurred while saving or deleting the orders");
+      toast.error("An error occurred while saving the order");
       console.error(error);
     }
   };
 
-  
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleUpdateClick = async () => {
+    if (!formData.productName || !formData.quantity || !formData.price) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    try {
+      if (selectedItem) {
+        const response = await axios.put(`${Base_Url}product/${selectedItem.orderId}`, {
+          productName: formData.productName,
+          quantity: formData.quantity,
+          price: formData.price,
+        });
+
+        if (response.data) {
+          setTableData((prev) =>
+            prev.map((item) =>
+              item.orderId === selectedItem.orderId
+                ? { ...item, productName: formData.productName, quantity: formData.quantity, price: formData.price }
+                : item
+            )
+          );
+          const quantityDifference = formData.quantity - (selectedItem.quantity || 0);
+          const priceDifference = formData.price - (selectedItem.price || 0);
+
+          setTotalQuantity((prev) => prev + quantityDifference);
+          setTotalPrice((prev) => prev + priceDifference);
+
+          toast.success("Order updated successfully!");
+          setIsPopupOpen(false);
+        } else {
+          toast.error("Failed to update order");
+        }
+      }
+    } catch (error) {
+      toast.error("An error occurred while updating the order");
+      console.error(error);
+    }
   };
 
+
+  const handleInputChange = (e: { target: { name: any; value: any; }; }) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleQuantityChange = (e: { target: { value: any; }; }) => {
+    const quantity = e.target.value;
+    const product = products.find(product => product.name === formData.productName);
+    
+    setFormData((prev) => ({
+      ...prev,
+      quantity: quantity,
+      price: product ? product.price * quantity : 0, // Update price based on new quantity
+    }));
+  };
+
+
   const handleCustomerNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCustomerName(e.target.value); 
+    setCustomerName(e.target.value);
+  };
+
+  const handleProductChange = (e: { target: { value: any; }; }) => {
+    const selectedProduct = e.target.value;
+    const product = products.find(product => product.name === selectedProduct);
+  
+    setFormData((prev) => ({
+      ...prev,
+      productName: selectedProduct,
+      price: product ? product.price * prev.quantity : 0, // Update price based on quantity
+    }));
   };
 
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = tableData.slice(indexOfFirstItem, indexOfLastItem);
-  
+
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
 
@@ -202,18 +285,26 @@ const [customerName, setCustomerName] = useState('');
       <Sidebar />
       <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
         <div className="ps-4 borderTable">
-          <div className='d-flex justify-content-between align-items-center'>
+          <div className='d-flex  align-items-center'>
             <i className="bi bi-arrow-left backicon" onClick={() => navigate('/dashboard')}></i>
             <span className='order'>Order</span>
-            <button className="btn btn-primary ms-auto me-4" onClick={handleSaveOrderClick} >Save</button>
           </div>
           <div className='heading d-flex justify-content-between align-items-center'>
             Customer Name
-            <input type="text"
-             className='ms-auto me-4 mt-2' 
-             value={customerName} 
-             onChange={handleCustomerNameChange}
-             />
+            <select
+              id="customerDropdown"
+              value={selectedCustomer}
+              onChange={handleCustomerChange}
+              className='ms-auto me-4 mt-2'
+            >
+              <option value="">Select a customer</option>
+              {customers.map((customer) => (
+                <option key={customer.Id} value={customer.fullName}>
+                  {customer.fullName}
+                </option>
+              ))}
+            </select>
+
           </div>
           <div className='heading d-flex justify-content-between align-items-center '>
             Total Quantity
@@ -221,7 +312,7 @@ const [customerName, setCustomerName] = useState('');
 
           </div>
           <div className='heading d-flex justify-content-between align-items-center'>
-            Total Price
+            Total Amount
             <input type="text" className='ms-auto me-4 mt-2 borderradius-2' readOnly value={totalPrice} />
 
           </div>
@@ -258,43 +349,81 @@ const [customerName, setCustomerName] = useState('');
               ))}
             </tbody>
           </table>
-          <Pagination 
-            itemsPerPage={itemsPerPage} 
-            totalItems={tableData.length} 
-            paginate={paginate} 
-            currentPage={currentPage} 
+          <Pagination
+            itemsPerPage={itemsPerPage}
+            totalItems={tableData.length}
+            paginate={paginate}
+            currentPage={currentPage}
           />
+          <div className="d-flex">
+            <button className="btn btn-primary ms-auto me-4" onClick={handleSaveOrderClick}>
+              Save
+            </button>
+          </div>
+
         </div>
       </div>
 
       <Popup isOpen={isPopupOpen} onClose={handleClosePopup} title={popupTitle}>
         <div className="mb-3">
-          <input
+          <label htmlFor=""> Product Name</label>
+          {/* <input
             type="text"
             name="productName"
-            placeholder="Product Name"
-            className="form-control mb-2"
+            className="form-control mb-2 mt-2"
             value={formData.productName}
             onChange={handleInputChange}
-          />
+          /> */}
+
+          <select
+            name="productName"
+            className="productDropdown mb-2 mt-2"
+            onChange={handleProductChange}
+            value={formData.productName}
+          >
+            <option value="">Select a product</option>
+            {products.map(product => (
+              <option key={product.name} value={product.name}>
+                {product.name}
+              </option>
+            ))}
+          </select>
+
+          <label htmlFor=""> Quantity</label>
           <input
             type="number"
             name="quantity"
-            placeholder="Quantity"
-            className="form-control mb-2"
+            className="form-control mb-2 mt-2"
             value={formData.quantity}
-            onChange={handleInputChange}
-          />
+            onChange={handleQuantityChange} // Update this line
+            />
+
+          <label htmlFor=""> Price</label>
           <input
-            type="number"
-            name="price"
-            placeholder="Price"
-            className="form-control mb-2"
-            value={formData.price}
-            onChange={handleInputChange}
-          />
+      type="number"
+      name="price"
+      className="form-control mb-2 mt-2"
+      value={formData.price}
+      readOnly // Make this read-only to prevent user editing
+    />
         </div>
-        <button className="btn btn-primary" onClick={handleSaveClick}>Save Order</button>
+        <div className="d-flex justify-content-between mt-3">
+          <div>
+            {selectedItem ? (
+              <button className="btn btn-primary me-2" onClick={handleUpdateClick}>
+                Update Order
+              </button>
+            ) : (
+              <button className="btn btn-primary me-2" onClick={handleSaveClick}>
+                Save Order
+              </button>
+            )}
+          </div>
+          <button className="btn btn-secondary" onClick={handleClosePopup}>
+            Close
+          </button>
+        </div>
+
       </Popup>
     </>
   );

@@ -9,6 +9,10 @@ export class OrderDto {
   @IsString()
   customerName: string;
 
+  // // @IsNotEmpty()
+  // @IsString()
+  // orderId: string;
+
   @IsNotEmpty()
   @IsString()
   totalQuantity: number;

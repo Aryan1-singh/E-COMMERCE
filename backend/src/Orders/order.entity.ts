@@ -7,6 +7,9 @@ export class OrderEntity {
 
   @Column()
   customerName: string; 
+  
+  @Column()
+  orderId: number;
 
   @Column()
   totalQuantity: number;
