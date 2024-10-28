@@ -1,6 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AddOrderController } from './addorder.controller';
+import { AddOrderController } from './addOrder.controller';
 import { AddOrderService } from './addOrder.service';
 import { AddOrder } from './addOrder.entity';
 
